@@ -1,2 +1,40 @@
-print ("Hola")
-HELLOOOOOOOO
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Periodo total del ciclo cardíaco
+T = 0.8
+tiempo = np.linspace(0, T, 1000)
+
+# Definir los puntos de cambio en cada fase
+inicio_disminucion = T / 4       # Inicio de la sístole
+inicio_llenado_rapido = T / 2    # Inicio de la diástole (llenado rápido)
+inicio_llenado_lento = 3 * T / 4 # Transición a llenado lento y auricular
+
+# Inicializar el array del volumen ventricular
+volumen_ventricular = np.zeros_like(tiempo)
+
+# Llenar el array 'volumen_ventricular' de acuerdo con cada fase
+for i in range(len(tiempo)):
+    if tiempo[i] < inicio_disminucion:
+        # Fase de volumen máximo antes de sístole
+        volumen_ventricular[i] = 130
+    elif inicio_disminucion <= tiempo[i] < inicio_llenado_rapido:
+        # Fase de contracción ventricular (sístole) con transición suave (curva exponencial)
+        volumen_ventricular[i] = 130 - (130 - 50) * (1 - np.exp(-(tiempo[i] - inicio_disminucion) * 5)) 
+    elif inicio_llenado_rapido <= tiempo[i] < inicio_llenado_lento:
+        # Fase de llenado rápido con una función cuadrática para suavizar el aumento
+        volumen_ventricular[i] = 50 + (80) * ((tiempo[i] - inicio_llenado_rapido) / (inicio_llenado_lento - inicio_llenado_rapido))**2
+    else:
+        # Fase de llenado lento y auricular con una oscilación pequeña
+        volumen_ventricular[i] = 90 + 5 * np.sin(10 * (tiempo[i] - inicio_llenado_lento)) 
+
+# Graficar el volumen ventricular
+plt.figure(figsize=(10, 6))
+plt.plot(tiempo, volumen_ventricular, color="purple", linewidth=2, label="Volumen Ventricular (Simulado)")
+plt.xlabel("Tiempo (s)", fontsize=12)
+plt.ylabel("Volumen (mL)", fontsize=12)
+plt.title("Simulación del Volumen Ventricular", fontsize=14)
+plt.legend(loc="upper right", fontsize=10)
+plt.grid(True, linestyle="--", alpha=0.7)
+plt.ylim(40, 140)  # Ajuste de límite del eje Y para reflejar el volumen máximo
+plt.show()
