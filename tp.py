@@ -1,33 +1,52 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Periodo total del ciclo cardíaco
-T = 0.8
-tiempo = np.linspace(0, T, 1000)
+# Parámetros del ciclo cardíaco
+lpm = 75  # latidos por minuto
+F = lpm / 60  # frecuencia en Hz
+T = 60 / lpm  # periodo total en segundos
+tiempo = np.linspace(0, T, 1000)  # tiempo para un ciclo
 
-# Definir los puntos de cambio en cada fase
-inicio_disminucion = T / 4       # Inicio de la sístole
-inicio_llenado_rapido = T / 2    # Inicio de la diástole (llenado rápido)
-inicio_llenado_lento = 3 * T / 4 # Transición a llenado lento y auricular
+# Volúmenes
+vol_d = 130  # volumen diastólico
+vol_s = 50   # volumen sistólico
+vol_medio = vol_d - vol_s  # volumen medio (amplitud de cambio en el volumen)
 
-def volumen_vent(inicio_disminucion, inicio_llenado_rapido, inicio_llenado_lento):
+# Definición de las funciones para cada fase
+def v1(x):
+    return vol_medio + vol_s * np.sin(3 / 4 * np.pi * (lpm / (60 * 0.25)) * x)
+
+def v2(x):
+    return v1(T * 0.25)
+
+def v3(x):
+    return vol_s - (vol_medio + vol_s * np.sin(3 / 4 * np.pi * (lpm / (60 * 0.25)) * (T * 0.25)) - vol_s) * np.exp(-30 * (x - T * 0.3125))
+
+def v4(x):
+    return vol_medio - (v3(T * 0.625) + 80) * np.exp(-30 * (x - T * 0.5625))
+
+# Función para calcular el volumen ventricular en cada instante de tiempo
+def volumen_vent():
     # Inicializar el array del volumen ventricular
     volumen_ventricular = np.zeros_like(tiempo)
 
-# Llenar el array 'volumen_ventricular' de acuerdo con cada fase
+    # Llenar el array 'volumen_ventricular' de acuerdo con cada fase
     for i in range(len(tiempo)):
-        if tiempo[i] < inicio_disminucion:
+        if 0 <= tiempo[i] < T * 0.25:
             # Fase de volumen máximo antes de sístole
-            volumen_ventricular[i] = 130
-        elif inicio_disminucion <= tiempo[i] < inicio_llenado_rapido:
+            volumen_ventricular[i] = v1(tiempo[i])
+        
+        elif T * 0.25 <= tiempo[i] < T * 0.3125:
             # Fase de contracción ventricular (sístole) con transición suave (curva exponencial)
-            volumen_ventricular[i] = 130 - (130 - 50) * (1 - np.exp(-(tiempo[i] - inicio_disminucion) * 5)) 
-        elif inicio_llenado_rapido <= tiempo[i] < inicio_llenado_lento:
-            # Fase de llenado rápido con una función cuadrática para suavizar el aumento
-            volumen_ventricular[i] = 50 + (80) * ((tiempo[i] - inicio_llenado_rapido) / (inicio_llenado_lento - inicio_llenado_rapido))**2
+            volumen_ventricular[i] = v2(tiempo[i])
+        
+        elif T * 0.3125 <= tiempo[i] < T * 0.625:
+            # Fase de llenado rápido
+            volumen_ventricular[i] = v3(tiempo[i])
+        
         else:
-            # Fase de llenado lento y auricular con una oscilación pequeña
-            volumen_ventricular[i] = 90 + 5 * np.sin(10 * (tiempo[i] - inicio_llenado_lento)) 
+            # Fase de llenado lento y auricular con oscilación pequeña
+            volumen_ventricular[i] = v4(tiempo[i])
 
     # Graficar el volumen ventricular
     plt.figure(figsize=(10, 6))
@@ -40,44 +59,58 @@ def volumen_vent(inicio_disminucion, inicio_llenado_rapido, inicio_llenado_lento
     plt.ylim(40, 140)  # Ajuste de límite del eje Y para reflejar el volumen máximo
     plt.show()
 
+# Llamada a la función para ejecutar la simulación
+#volumen_vent()
 
-def presion_aort(inicio_disminucion, inicio_llenado_rapido, inicio_llenado_lento):
 
-    P_max = 120      # Presión máxima sistólica
-    P_base = 80      # Presión diastólica (mínima)
-    t_sistole = 0.3  # Duración aproximada de la sístole
-    t_diastole = 0.5 # Duración aproximada de la diástole
+import numpy as np
+import matplotlib.pyplot as plt
 
-    # Tiempo total del ciclo cardíaco
-    T = t_sistole + t_diastole
-    tiempo = np.linspace(0, T, 1000)
+# Parámetros
+lpm = 75  # latidos por minuto
+T = 60 / lpm  # periodo total en segundos
+tiempo = np.linspace(0, T, 1000)  # tiempo para un ciclo
 
-    
-    def presion_aortica(t):
-        if t < (t_sistole/3):
-            return P_base
-        elif t > (t_sistole/3) and t < t_sistole:
-            return P_base + 20 * np.sin((np.pi / (t_sistole - t_sistole / 3)) * (t - t_sistole / 3))
-            #return P_base + (P_max - P_base) * np.exp(-(t - t_sistole) * 5)
+# Presiones
+pres_d = 120  # presión diastólica
+pres_s = 80   # presión sistólica
+pres_amplitud = (pres_d - pres_s) / 2
+pres_media = (pres_d + pres_s) / 2
 
+# Definición de las funciones para cada fase de la presión
+def p1(x):
+    return pres_media + (pres_amplitud * np.sin(3 / 2 * np.pi * (lpm / 60 * (3 / 8)) * x  -1 / 2 * np.pi))
+
+def p2(x):
+    return pres_media + ((pres_amplitud / 2) * np.sin(3 / 2 * np.pi * (lpm / 60 * (3 / 8)) * x - 1/2 * np.pi))
+
+def p3(x):
+    return pres_media + (pres_amplitud * np.sin(-np.pi * (lpm / 60 * (5 / 8)) * x - np.pi))
+
+# Función para calcular la presión aórtica en cada instante de tiempo
+def presion_aort():
+    # Inicializar el array de la presión aórtica
+    presion_aortica = np.zeros_like(tiempo)
+
+    # Llenar el array 'presion_aortica' de acuerdo con cada fase
+    for i in range(len(tiempo)):
+        if 0 <= tiempo[i] < T * 3 / 8:
+            presion_aortica[i] = p1(tiempo[i])
+        elif T * 3 / 8 <= tiempo[i] < T * 5 / 8:
+            presion_aortica[i] = p2(tiempo[i])
         else:
-            return P_base 
+            presion_aortica[i] = p3(tiempo[i])
 
-
-    presion = np.vectorize(presion_aortica)(tiempo)
-
-    
+    # Graficar la presión aórtica
     plt.figure(figsize=(10, 6))
-    plt.plot(tiempo, presion, color="red", label="Presión Aórtica Simulada")
-
-    
-    plt.xlabel("Tiempo (s)")
-    plt.ylabel("Presión (mmHg)")
-    plt.title("Simulación de la Presión Aórtica")
-    plt.legend()
+    plt.plot(tiempo, presion_aortica, color="blue", linewidth=2, label="Presión Aórtica (Simulada)")
+    plt.xlabel("Tiempo (s)", fontsize=12)
+    plt.ylabel("Presión (mmHg)", fontsize=12)
+    plt.title("Simulación de la Presión Aórtica", fontsize=14)
+    plt.legend(loc="upper right", fontsize=10)
     plt.grid(True, linestyle="--", alpha=0.7)
-    plt.ylim(70, P_max + 10)
+    plt.ylim(60, 140)  # Ajuste de límite del eje Y para reflejar la presión máxima y mínima
     plt.show()
 
-
-presion_aort(inicio_disminucion, inicio_llenado_rapido, inicio_llenado_lento)
+# Llamada a la función para ejecutar la simulación
+presion_aort()
