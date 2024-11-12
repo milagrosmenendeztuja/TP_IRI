@@ -60,7 +60,7 @@ def volumen_vent():
     plt.show()
 
 # Llamada a la función para ejecutar la simulación
-#volumen_vent()
+volumen_vent()
 
 
 # Presiones
