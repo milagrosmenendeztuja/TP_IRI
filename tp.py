@@ -62,63 +62,54 @@ def volumen_vent():
 # Llamada a la función para ejecutar la simulación
 #volumen_vent()
 
-import numpy as np
-import matplotlib.pyplot as plt
 
-# Parámetros de presión
+# Presiones
 pres_d = 120  # presión diastólica
 pres_s = 80   # presión sistólica
-pres_amplitud = (pres_d - pres_s) / 2  # 20
-pres_media = (pres_d + pres_s) / 2     # 100
-
-# Frecuencia cardíaca (latidos por minuto) y periodo de un ciclo
-lpm = 75
-T = 60 / lpm
+pres_amplitud = (pres_d - pres_s) / 2 #20
+pres_media = (pres_d + pres_s) / 2 #100
 
 # Definición de las funciones para cada fase de la presión
-def q1(x):
-    return pres_media + (pres_amplitud * np.sin((3 / 2) * np.pi * (lpm / 60 * (3 / 8)) * x - (1 / 2 * np.pi)))
+def p1(x):
+    return pres_media + (pres_amplitud * np.sin( (3 / 2) * np.pi * (lpm / (60 * (3 / 8))) * x - ((1 / 2) * np.pi) ) )
 
-def g2(x):
-    return pres_media + ((pres_amplitud / 2) * np.sin((3 / 2) * np.pi * (lpm / 60 * (3 / 8)) * x - (1 / 2 * np.pi)))
+def p2(x):
+    return pres_media + ((pres_amplitud / 2) * np.sin( (3 / 2) * np.pi * (lpm / (60 * (3 / 8))) * x - (1/2 * np.pi) ) )
 
-def h(x):
-    return pres_media + (pres_amplitud * np.sin(-np.pi * (lpm / 60 * (5 / 8)) * x - np.pi))
+def p3(x):
+    return pres_media + (pres_amplitud * np.sin((-np.pi) * (lpm / (60 * (5 / 8))) * x - np.pi))
 
-# Tiempo para un ciclo de presión
-tiempo = np.linspace(0, T, 1000)
+# Función para calcular la presión aórtica en cada instante de tiempo
+def presion_aort():
+    # Inicializar el array de la presión aórtica
+    presion_aortica = np.zeros_like(tiempo)
 
-# Inicializar el array de presión aórtica
-presion_aortica = np.zeros_like(tiempo)
+    # Llenar el array 'presion_aortica' de acuerdo con cada fase
+    for i in range(len(tiempo)):
+        if 0 <= tiempo[i] < T * (3 / 8):
 
-# Llenar el array con las funciones por cada fase
-for i in range(len(tiempo)):
-    if 0 <= tiempo[i] < T * (3 / 8):
-        presion_aortica[i] = q1(tiempo[i])
-    elif T * (3 / 8) <= tiempo[i] < T * (5 / 8):
-        presion_aortica[i] = g2(tiempo[i])
-    elif T * (5 / 8) <= tiempo[i] < T:
-        presion_aortica[i] = h(tiempo[i])
+            presion_aortica[i] = p1(tiempo[i])
+        
+        elif T * (3 / 8) <= tiempo[i] < T * (5 / 8):
 
-# Graficar la presión aórtica con estilo similar a la imagen
-plt.figure(figsize=(10, 6))
-plt.plot(tiempo, presion_aortica, color="gray", linewidth=2)
+            presion_aortica[i] = p2(tiempo[i])
 
-# Resaltar la sección de g2 en naranja
-tiempo_g2 = tiempo[(tiempo >= T * (3 / 8)) & (tiempo < T * (5 / 8))]
-presion_g2 = presion_aortica[(tiempo >= T * (3 / 8)) & (tiempo < T * (5 / 8))]
-plt.plot(tiempo_g2, presion_g2, color="orange", linewidth=2)
+        elif T*(5/8) <= tiempo[i] < T:
 
-# Marcar los puntos q1, g2 y h
-plt.text(T * (3 / 8) / 4, q1(T * (3 / 8) / 4), "q₁", fontsize=12, ha='right')
-plt.text(T * (3 / 8) + (T * (5 / 8) - T * (3 / 8)) / 2, g2(T * (3 / 8) + (T * (5 / 8) - T * (3 / 8)) / 2), "g₂", fontsize=12, ha='right')
-plt.text(T * (5 / 8) + (T - T * (5 / 8)) / 2, h(T * (5 / 8) + (T - T * (5 / 8)) / 2), "h", fontsize=12, ha='right')
+            presion_aortica[i] = p3(tiempo[i])
 
-# Ajustes de la gráfica
-plt.xlabel("Tiempo (s)", fontsize=12)
-plt.ylabel("Presión (mmHg)", fontsize=12)
-plt.title("Simulación de la Presión Aórtica", fontsize=14)
-plt.grid(True, linestyle="--", alpha=0.7)
-plt.ylim(60, 140)
-plt.show()
+
+    # Graficar la presión aórtica
+    plt.figure(figsize=(10, 6))
+    plt.plot(tiempo, presion_aortica, color="blue", linewidth=2, label="Presión Aórtica (Simulada)")
+    plt.xlabel("Tiempo (s)", fontsize=12)
+    plt.ylabel("Presión (mmHg)", fontsize=12)
+    plt.title("Simulación de la Presión Aórtica", fontsize=14)
+    plt.legend(loc="upper right", fontsize=10)
+    plt.grid(True, linestyle="--", alpha=0.7)
+    plt.ylim(40, 140)  # Ajuste de límite del eje Y para reflejar la presión máxima y mínima
+    plt.show()
+
+presion_aort()
+
 
