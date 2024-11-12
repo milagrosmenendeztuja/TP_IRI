@@ -1,0 +1,54 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Parámetros
+lpm = 75  # latidos por minuto
+T = 60 / lpm  # periodo total en segundos
+num_ciclos = 5  # número de ciclos a simular
+tiempo_total = np.linspace(0, num_ciclos * T, num_ciclos * 1000)  # tiempo para varios ciclos
+
+# Presiones
+pres_d = 120  # presión diastólica
+pres_s = 80   # presión sistólica
+pres_amplitud = (pres_d - pres_s) / 2
+pres_media = (pres_d + pres_s) / 2
+
+# Definición de las funciones para cada fase de la presión
+def p1(x):
+    return pres_media + pres_amplitud * np.sin(3 / 2 * np.pi * (lpm / (60 * 3 / 8)) * x - 1 / 2 * np.pi)
+
+def p2(x):
+    return pres_media + (pres_amplitud / 2) * np.sin(3 / 2 * np.pi * (lpm / (60 * (3 / 8))) * x - 1 / 2 * np.pi)
+
+def p3(x):
+    return pres_media + pres_amplitud * np.sin(-np.pi * (lpm / (60 * (5 / 8))) * x - np.pi)
+
+# Función para calcular la presión aórtica en cada instante de tiempo
+def presion_aort():
+    # Inicializar el array de la presión aórtica
+    presion_aortica = np.zeros_like(tiempo_total)
+
+    # Llenar el array 'presion_aortica' de acuerdo con cada fase en cada ciclo
+    for i in range(len(tiempo_total)):
+        # Ajuste del tiempo relativo al ciclo actual
+        t_relativo = tiempo_total[i] % T
+        if 0 <= t_relativo < T * 3 / 8:
+            presion_aortica[i] = p1(t_relativo)
+        elif T * 3 / 8 <= t_relativo < T * 5 / 8:
+            presion_aortica[i] = p2(t_relativo)
+        else:
+            presion_aortica[i] = p3(t_relativo)
+
+    # Graficar la presión aórtica
+    plt.figure(figsize=(12, 6))
+    plt.plot(tiempo_total, presion_aortica, color="blue", linewidth=2, label="Presión Aórtica (Simulada)")
+    plt.xlabel("Tiempo (s)", fontsize=12)
+    plt.ylabel("Presión (mmHg)", fontsize=12)
+    plt.title("Simulación de la Presión Aórtica en Varios Ciclos", fontsize=14)
+    plt.legend(loc="upper right", fontsize=10)
+    plt.grid(True, linestyle="--", alpha=0.7)
+    plt.ylim(60, 140)  # Ajuste de límite del eje Y para reflejar la presión máxima y mínima
+    plt.show()
+
+# Llamada a la función para ejecutar la simulación
+presion_aort()
