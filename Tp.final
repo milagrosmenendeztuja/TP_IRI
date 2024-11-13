@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+i=0
 while i<1:
     # Parámetros
     lpm = int(input("Ingrese sus latidos por minuto"))  # latidos por minuto
