@@ -92,6 +92,7 @@ while i<1:
             else:
                 presion_aortica[i] = p3(t_relativo)
 
+
         # Graficar la presión aórtica
         plt.figure(figsize=(12, 6))
         plt.plot(tiempo_total, presion_aortica, color="blue", linewidth=2, label="Presión Aórtica (Simulada)")
